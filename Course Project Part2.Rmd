@@ -1,0 +1,97 @@
+---
+title: "Statistical Inference Course Project Part 2"
+author: "Madhur"
+date: "July 25, 2015"
+output: pdf_document
+---
+
+### Overview 
+
+Analyze the ToothGrowth data in the R datasets package.
+
+Load the ToothGrowth data and perform some basic exploratory data analyses
+Provide a basic summary of the data.
+Use confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose. (Only use the techniques from class, even if there’s other approaches worth considering)
+State your conclusions and the assumptions needed for your conclusions.
+
+#### Load Data
+
+```{r}
+library(datasets)
+str(ToothGrowth)
+```
+
+#### Data Analysis
+
+```{r}
+# Calculate the mean length of the tooth for every supp and dose
+avg <- aggregate(len~.,data=ToothGrowth,mean)
+
+# plot the scatter points and the avg lines for the average length
+library(ggplot2)
+g <- ggplot(ToothGrowth,aes(x=dose,y=len))
+g <- g + geom_point(aes(group=supp,colour=supp,size=2,alpha=0.6))
+g <- g + geom_line(data=avg,aes(group=supp,colour=supp))
+print(g)
+```
+
+The figure above shows that as the dosage increases, the average tooth length increases. Lets try to create a box plot for the same data to see if we can find more.
+
+#### Basic Summary of Data  
+The summary for the data collection is:
+```{r}
+summary(ToothGrowth)
+```
+```{r}
+print(paste("Number of rows in the data are ",nrow(ToothGrowth)))
+
+```
+```{r}
+head(ToothGrowth)
+````
+Essentially, we have two different methods of delivery (orange juice and ascorbic acid) and we are measuring the tooth length with respect to different doses of the two different methods of delivery. Also, the first 30 rows are for VC supp while the next 30 are for OJ sub.
+
+#### Tooth Growth Comparison
+Before doing hypothesis and confidence interval analysis, lets transform the data:
+
+```{r}
+datOJ <- ToothGrowth[31:60,]
+datVC <- ToothGrowth[1:30,]
+length_comp <- datOJ$len - datVC$len
+comp_data <- data.frame(length_comp, datOJ$dose)
+names(comp_data) <- c("diff_length", "dose")
+```
+
+Now, we have a mechanism to compare the difference in tooth length for different modes of delivery namely, OJ and VC and if diff_length is positive, it means OJ is more effective
+
+#### When dose == 0.5
+```{r}
+n <- subset(comp_data, dose == 0.5)
+t.test(n)
+```
+
+Positive mean and confidence interval meaning that OJ is more effective at dose == 0.5 and the p-value is 0.01547 which means that the two methods are different.
+
+
+#### When dose == 1.0
+```{r}
+n <- subset(comp_data, dose == 1.0)
+t.test(n)
+```
+
+Positive mean and confidence interval meaning that OJ is more effective at dose == 1.0 and the p-value is 0.03 which means that the two methods are different
+
+#### When dose == 2.0
+```{r}
+n <- subset(comp_data, dose == 2.0)
+t.test(n)
+```
+
+Positive mean is low in number and confidence interval is both positive and negative meaning that the two methods have similar effectiveness at dose == 2.0 and the p-value is 0.3 (closer to 0.5) which means that the two methods are approaching parity.
+
+### Conclusions
+
+1. From the box plot and the scatter plot, it is clear that as the dose increases, the effectiveness of the both the methods increases.
+2. From the hypothesis and confidence interval analysis, for lower dose values (0.5 and 1.0), OJ is an effective method while for higher dose value (2.0), both methods achieve parity.  
+
+An assumption that we have made is that we have used t-model for such a small set of data.
